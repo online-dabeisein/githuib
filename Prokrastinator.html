@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .button-container {
+            text-align: center;
+            border: 2px solid black;
+            padding: 20px;
+            border-radius: 15px;
+            width: 220px;
+        }
+        .symbol {
+            font-size: 30px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        #resetSymbol {
+            font-weight: bold;
+        }
+        #focusSymbol {
+            color: gold;
+        }
+        #counter {
+            font-size: 96px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .falling {
+            position: absolute;
+            animation: fall linear infinite;
+            width: 10px;
+            height: 10px;
+        }
+        @keyframes fall {
+            from { top: -10%; }
+            to { top: 110%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="button-container">
+        <div id="counter">0</div>
+        <span id="startSymbol" class="symbol" onclick="updateCounter(startPoints())">&#9658;</span>
+        <span id="focusSymbol" class="symbol" onclick="updateCounter(1)">&#9733;</span>
+        <span id="taskSymbol" class="symbol" onclick="updateCounter(5)">&#10004;</span>
+        <span id="goalSymbol" class="symbol" onclick="updateCounter(20)">&#127942;</span>
+        <span id="resetSymbol" class="symbol" onclick="undoLast()">&#8634;</span>
+    </div>
+    
+    <script>
+        var counter = parseInt(localStorage.getItem('counter') || "0");
+        var lastValue = parseInt(localStorage.getItem('lastValue') || "0");
+        var confettiTriggered = localStorage.getItem('confettiTriggered') === "true";
+        document.getElementById('counter').innerText = counter;
+
+        function startPoints() {
+            const now = new Date();
+            const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+            let diffInMinutes = Math.floor((now - startOfDay) / 60000);
+            return Math.max(0, 10 - diffInMinutes);
+        }
+
+        function updateCounter(value) {
+            lastValue = value;
+            counter += value;
+            document.getElementById('counter').innerText = counter;
+            localStorage.setItem('counter', counter);
+            localStorage.setItem('lastValue', lastValue);
+            if (counter >= 90 && !confettiTriggered) {
+                createConfetti();
+                confettiTriggered = true;
+                localStorage.setItem('confettiTriggered', true);
+            }
+        }
+
+        function undoLast() {
+            counter -= lastValue;
+            if (counter < 90) {
+                confettiTriggered = false;
+                localStorage.setItem('confettiTriggered', false);
+            }
+            document.getElementById('counter').innerText = counter;
+            localStorage.setItem('counter', counter);
+        }
+
+        function createConfetti() {
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'falling';
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.top = `${Math.random() * -100}vh`;
+                confetti.style.background = ['red', 'blue', 'green', 'yellow', 'orange', 'pink'][Math.floor(Math.random() * 6)];
+                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                document.body.appendChild(confetti);
+            }
+            setTimeout(() => {
+                document.querySelectorAll('.falling').forEach(e => e.remove());
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
